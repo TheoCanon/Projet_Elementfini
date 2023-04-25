@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/Gebruiker/OneDrive/Documents/Ecole/Q6/Elements finis/LinearElasticity/glfw
+# Install script for directory: C:/Users/Gebruiker/OneDrive/Documents/Ecole/Q6/Elements finis/Projet/Projet_Elementfini/group055-canont-julijacques/glfw
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -39,7 +39,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("C:/Users/Gebruiker/OneDrive/Documents/Ecole/Q6/Elements finis/LinearElasticity/build/glfw/src/cmake_install.cmake")
+  include("C:/Users/Gebruiker/OneDrive/Documents/Ecole/Q6/Elements finis/Projet/Projet_Elementfini/group055-canont-julijacques/build/glfw/src/cmake_install.cmake")
 
 endif()
 

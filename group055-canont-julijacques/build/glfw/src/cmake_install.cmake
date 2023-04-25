@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/Gebruiker/OneDrive/Documents/Ecole/Q6/Elements finis/LinearElasticity/glfw/src
+# Install script for directory: C:/Users/Gebruiker/OneDrive/Documents/Ecole/Q6/Elements finis/Projet/Projet_Elementfini/group055-canont-julijacques/glfw/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
