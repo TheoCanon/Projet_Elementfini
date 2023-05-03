@@ -1,7 +1,7 @@
 /*
  *  main.c
  *  Library for EPL1110 : Finite Elements for dummies
- *  Elasticite lineaire plane
+ *  Utilisation de l'API de GMSH pour cr�er un maillage
  *
  *  Copyright (C) 2023 UCL-IMMC : Vincent Legat
  *  All rights reserved.
@@ -13,97 +13,127 @@
 
 int main(void)
 {  
-    printf("\n\n    V : Mesh and displacement norm \n");
+    printf("\n\n    V : Mesh and size mesh field \n");
     printf("    D : Domains \n");
-    printf("    N : Next domain highlighted\n\n\n");
+    printf("    N : Next domain highlighted\n");
 
 
+
+ 
     double Lx = 1.0;
-    double Ly = 1.0;
+    double Ly = 2.0;
       
+    int ierr;
+    
     geoInitialize();
     femGeo* theGeometry = geoGetGeometry();
     
-    theGeometry->LxPlate     =  Lx;
-    theGeometry->LyPlate     =  Ly;     
-    theGeometry->h           =  Lx * 0.05;    
-    theGeometry->elementType = FEM_QUAD;
-  
+    theGeometry->LxPlate =  Lx;
+    theGeometry->LyPlate =  Ly;
+    theGeometry->xPlate  =  0.0;
+    theGeometry->yPlate  =  0.0;
+    theGeometry->xHole   =  Lx / 4.0;
+    theGeometry->yHole   =  Ly / 4.0;
+    theGeometry->rHole   =  Lx / 8.0;
+    theGeometry->xNotch  = -Lx / 2.0;
+    theGeometry->yNotch  = -Ly / 2.0;
+    theGeometry->rNotch  =  Lx / 2.0;
+    
+    theGeometry->h       =  Lx * 0.1;    // 0.1 c'est plus joli :-)
+    theGeometry->hHole   =  theGeometry->h * 0.2;
+    theGeometry->hNotch  =  theGeometry->h * 0.05;
+    theGeometry->dHole   =  theGeometry->h * 1.0;
+    theGeometry->dNotch  =  theGeometry->h * 4.0;
+
+   
     geoMeshGenerate();
     geoMeshImport();
-    geoSetDomainName(0,"Symmetry");
-    geoSetDomainName(7,"Bottom");
     
-        
-//
-//  -2- Creation probleme 
-//
+    geoSetDomainName(0,"Outer Disk");
+    geoSetDomainName(1,"Bottom");
+    geoSetDomainName(2,"Left");
+    geoSetDomainName(3,"Right");
+    geoSetDomainName(4,"Top");
+    geoSetDomainName(5,"Inner Disk");
     
-    double E   = 211.e9;
-    double nu  = 0.3;
-    double rho = 7.85e3; 
-    double g   = 9.81;
-    femProblem* theProblem = femElasticityCreate(theGeometry,E,nu,rho,g,PLANAR_STRAIN);
-    femElasticityAddBoundaryCondition(theProblem,"Symmetry",DIRICHLET_X,0.0);
-    femElasticityAddBoundaryCondition(theProblem,"Bottom",DIRICHLET_Y,0.0);
-    femElasticityPrint(theProblem);
-    double *theSoluce = femElasticitySolve(theProblem); 
-   
+
 //
-//  -3- Deformation du maillage pour le plot final
-//      Creation du champ de la norme du deplacement
+//  -2- Creation du fichier du maillage
 //
     
+    char filename[] = "../data/mesh.txt";
+    geoMeshWrite(filename);
+
+//
+//  -3- Champ de la taille de r�f�rence du maillage
+//
+
+    double *meshSizeField = malloc(theGeometry->theNodes->nNodes*sizeof(double));
     femNodes *theNodes = theGeometry->theNodes;
-    double deformationFactor = 1e5;
-    double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
-    
-    for (int i=0; i<theNodes->nNodes; i++){
-        theNodes->X[i] += theSoluce[2*i+0]*deformationFactor;
-        theNodes->Y[i] += theSoluce[2*i+1]*deformationFactor;
-        normDisplacement[i] = sqrt(theSoluce[2*i+0]*theSoluce[2*i+0] + 
-                                   theSoluce[2*i+1]*theSoluce[2*i+1]); }
-  
-    double hMin = femMin(normDisplacement,theNodes->nNodes);  
-    double hMax = femMax(normDisplacement,theNodes->nNodes);  
-    printf(" ==== Minimum displacement          : %14.7e \n",hMin);
-    printf(" ==== Maximum displacement          : %14.7e \n",hMax);
+    for(int i=0; i < theNodes->nNodes; ++i)
+        meshSizeField[i] = geoSize(theNodes->X[i], theNodes->Y[i]);
+    double hMin = femMin(meshSizeField,theNodes->nNodes);  
+    double hMax = femMax(meshSizeField,theNodes->nNodes);  
+    printf(" ==== Global requested h : %14.7e \n",theGeometry->h);
+    printf(" ==== Minimum h          : %14.7e \n",hMin);
+    printf(" ==== Maximum h          : %14.7e \n",hMax);
  
 //
 //  -4- Visualisation du maillage
 //  
     
-    int mode = 1; 
+    int mode = 1; // Change mode by pressing "j", "k", "l"
     int domain = 0;
     int freezingButton = FALSE;
     double t, told = 0;
-    char theMessage[MAXNAME];
-   
+    char theMessage[256];
+    double pos[2] = {20,460};
  
-    GLFWwindow* window = glfemInit("EPL1110 : Linear elasticity ");
+ 
+    GLFWwindow* window = glfemInit("EPL1110 : Mesh generation ");
     glfwMakeContextCurrent(window);
 
     do {
         int w,h;
+    
+    
         glfwGetFramebufferSize(window,&w,&h);
         glfemReshapeWindows(theGeometry->theNodes,w,h);
 
         t = glfwGetTime();  
+    //    glfemChangeState(&mode, theMeshes->nMesh);
         if (glfwGetKey(window,'D') == GLFW_PRESS) { mode = 0;}
         if (glfwGetKey(window,'V') == GLFW_PRESS) { mode = 1;}
         if (glfwGetKey(window,'N') == GLFW_PRESS && freezingButton == FALSE) { domain++; freezingButton = TRUE; told = t;}
+
         
         if (t-told > 0.5) {freezingButton = FALSE; }
+            
+        
+        
+         
         if (mode == 1) {
-            glfemPlotField(theGeometry->theElements,normDisplacement);
+            glfemPlotField(theGeometry->theElements, meshSizeField);
             glfemPlotMesh(theGeometry->theElements); 
             sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
-            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage); }
+ 
+            
+            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
+ 
+            
+            
+            }
         if (mode == 0) {
             domain = domain % theGeometry->nDomains;
             glfemPlotDomain( theGeometry->theDomains[domain]); 
+            
+            
+            
             sprintf(theMessage, "%s : %d ",theGeometry->theDomains[domain]->name,domain);
-             glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);  }
+ 
+            
+            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
+            }
             
          glfwSwapBuffers(window);
          glfwPollEvents();
@@ -112,12 +142,10 @@ int main(void)
             
     // Check if the ESC key was pressed or the window was closed
 
-    free(normDisplacement);  
+    free(meshSizeField);  
     geoFinalize();
     glfwTerminate(); 
     
     exit(EXIT_SUCCESS);
     return 0;  
 }
-
- 

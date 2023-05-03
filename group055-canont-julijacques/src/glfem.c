@@ -406,8 +406,3 @@ GLFWwindow* glfemInit(char *theWindowName)
     glMakeRasterFont();
     return(window);
 }
-
-
-
-
-
