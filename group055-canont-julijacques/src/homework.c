@@ -62,35 +62,47 @@ void geoMeshGenerate() {
  
 //
 //  -1- Construction de la géométrie avec OpenCascade
-//      On crée le rectangle
-//      On crée les deux cercles
-//      On soustrait les cercles du rectangle :-)
 //
 
     int ierr;
-    int idbottomcircle = gmshModelOccAddDisk(0,200,0,15.75,15.75,-1,NULL,0,NULL,0,&ierr);
-    int idholebottomcircle = gmshModelOccAddDisk(0,200,0,10,10,-1,NULL,0,NULL,0,&ierr);
-    int idheadcircle = gmshModelOccAddDisk(0,0,0,22.15,22.15,-1,NULL,0,NULL,0,&ierr);
-    int idhandle = gmshModelOccAddRectangle(-7.5,20,0, 15,170 ,-1, 0.0,&ierr);
-    int idbolt = gmshModelOccAddRectangle(-8.5,0,0.0,17,-50,-1,1,&ierr); // on veut les bords arrondis 
-    
-    
-    int bottomcircle[] = {2,idbottomcircle};
-    int holebottomcircle[] = {2,idholebottomcircle};
-    int headcircle[]  = {2,idheadcircle};
-    int handle[] = {2,idhandle}; // manche de la clé à molette
-    int bolt[] = {2,idbolt}; // trou du boulon
-    gmshModelOccRotate(bolt,2,0,5,0,0,0,1,0.2,&ierr);
-    gmshModelOccCut(headcircle,2,bolt,2,NULL,NULL,NULL,NULL,NULL,-1,1,1,&ierr); 
-    gmshModelOccCut(bottomcircle,2,holebottomcircle ,2,NULL,NULL,NULL,NULL,NULL,-1,1,1,&ierr); 
-    gmshModelOccFuse(handle,2,bottomcircle,2,NULL,NULL,NULL,NULL,NULL,-1,1,1,&ierr);
-    gmshModelOccFuse(handle,2,headcircle,2,NULL,NULL,NULL,NULL,NULL,-1,1,1,&ierr);
+    int idbottomcircle =     gmshModelOccAddDisk(0, 200, 0, 15, 15, -1, NULL, 0, NULL, 0, &ierr);
+    int idholebottomcircle = gmshModelOccAddDisk(0, 200, 0, 10, 10, -1, NULL, 0, NULL, 0, &ierr);
+    int idhandle =           gmshModelOccAddRectangle(-7.5, 20, 0, 15, 170, -1, 0, &ierr);
+    int idheadcircle =       gmshModelOccAddDisk(0, 0, 0, 22, 22, -1, NULL, 0, NULL, 0, &ierr);
+    int idbolt =             gmshModelOccAddRectangle(-8.5, 0, 0, 17, -50, -1, 1, &ierr); // on veut les bords arrondis
 
+    // pour arrondir les angles
+    int idcarre1 =   gmshModelOccAddRectangle(-10.5, 17, 0, 3.5, 6, -1, 0, &ierr);
+    int idarrondi1 = gmshModelOccAddDisk(-11, 23, 0, 3.6, 3.6, -1, NULL, 0, NULL, 0, &ierr);
+    int carre1[] = {2, idcarre1};
+    int arrondi1[] = {2, idarrondi1};
+    int idcarre2 =   gmshModelOccAddRectangle(10.5, 17, 0, -3.5, 6, -1, 0, &ierr);
+    int idarrondi2 = gmshModelOccAddDisk(11, 23, 0, 3.6, 3.6, -1, NULL, 0, NULL, 0, &ierr);
+    int carre2[] = {2, idcarre2};
+    int arrondi2[] = {2, idarrondi2};
+    
+    int bottomcircle[] = {2, idbottomcircle};
+    int holebottomcircle[] = {2, idholebottomcircle};
+    int headcircle[]  = {2, idheadcircle};
+    int handle[] = {2, idhandle}; // manche de la clé à molette
+    int bolt[] = {2, idbolt}; // trou du boulon
+
+    gmshModelOccRotate(bolt, 2, 0, 5, 0, 0, 0, 1, 0.2, &ierr);
+    gmshModelOccCut(headcircle, 2, bolt, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccCut(bottomcircle, 2, holebottomcircle, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(handle, 2, bottomcircle, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(handle, 2, headcircle, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+
+    
+    gmshModelOccCut(carre1, 2, arrondi1, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccCut(carre2, 2, arrondi2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(handle, 2, carre1, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(handle, 2, carre2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
 //
 //  -2- Définition de la fonction callback pour la taille de référence
 //      Synchronisation de OpenCascade avec gmsh
 //      Génération du maillage (avec l'option Mesh.SaveAll :-)
-                  
+    
     geoSetSizeCallback(geoSize);   
     gmshModelOccSynchronize(&ierr);  
     gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
