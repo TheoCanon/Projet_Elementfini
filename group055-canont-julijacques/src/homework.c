@@ -66,13 +66,13 @@ void geoMeshGenerate() {
 //      On crée les deux cercles
 //      On soustrait les cercles du rectangle :-)
 //
- 
+
     int ierr;
-    int idbottomcircle= gmshModelOccAddDisk(0,0,0,15.75,15.75,-1,NULL,0,NULL,0,&ierr);
-    int idholebottomcircle = gmshModelOccAddDisk(0,0,0,11,11,-1,NULL,0,NULL,0,&ierr);
-    int idheadcircle=gmshModelOccAddDisk(0,-278,0,22.15,22.15,-1,NULL,0,NULL,0,&ierr);
-    int idhandle= gmshModelOccAddRectangle(-7.5,-258,0, 15,245 ,-1, 0.0,&ierr);
-    int idbolt = gmshModelOccAddRectangle(-8.5,-284.45,0.0,17,-269.95,-1,1,&ierr); // on veut les bords arrondis 
+    int idbottomcircle = gmshModelOccAddDisk(0,200,0,15.75,15.75,-1,NULL,0,NULL,0,&ierr);
+    int idholebottomcircle = gmshModelOccAddDisk(0,200,0,10,10,-1,NULL,0,NULL,0,&ierr);
+    int idheadcircle = gmshModelOccAddDisk(0,0,0,22.15,22.15,-1,NULL,0,NULL,0,&ierr);
+    int idhandle = gmshModelOccAddRectangle(-7.5,20,0, 15,170 ,-1, 0.0,&ierr);
+    int idbolt = gmshModelOccAddRectangle(-8.5,0,0.0,17,-50,-1,1,&ierr); // on veut les bords arrondis 
     
     
     int bottomcircle[] = {2,idbottomcircle};
@@ -80,11 +80,12 @@ void geoMeshGenerate() {
     int headcircle[]  = {2,idheadcircle};
     int handle[] = {2,idhandle}; // manche de la clé à molette
     int bolt[] = {2,idbolt}; // trou du boulon
+    gmshModelOccRotate(bolt,2,0,5,0,0,0,1,0.2,&ierr);
     gmshModelOccCut(headcircle,2,bolt,2,NULL,NULL,NULL,NULL,NULL,-1,1,1,&ierr); 
     gmshModelOccCut(bottomcircle,2,holebottomcircle ,2,NULL,NULL,NULL,NULL,NULL,-1,1,1,&ierr); 
     gmshModelOccFuse(handle,2,bottomcircle,2,NULL,NULL,NULL,NULL,NULL,-1,1,1,&ierr);
-    gmshModelOccFuse(handle,2,headcircle,2,NULL,NULL,NULL,NULL,NULL,-1,1,1,&ierr);  
- 
+    gmshModelOccFuse(handle,2,headcircle,2,NULL,NULL,NULL,NULL,NULL,-1,1,1,&ierr);
+
 //
 //  -2- Définition de la fonction callback pour la taille de référence
 //      Synchronisation de OpenCascade avec gmsh
@@ -94,7 +95,7 @@ void geoMeshGenerate() {
     gmshModelOccSynchronize(&ierr);  
     gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
     gmshModelMeshGenerate(2, &ierr);  
-       
+    
 //
 //  Generation de quads (avec quelques triangles...) :-)
 //
